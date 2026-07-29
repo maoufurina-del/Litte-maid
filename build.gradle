@@ -14,8 +14,28 @@ allprojects {
         maven { url 'https://maven.terraformersmc.com/' }
         maven { url 'https://maven.shedaniel.me/' }
         maven { url 'https://jitpack.io' }
+        maven { url 'https://maven.architectury.dev/' }
         flatDir { dirs 'libs' }
     }
+}
+
+// Configuration to fetch required local libs automatically if they are not present in ./libs
+configurations.register('fetchLibs')
+
+dependencies {
+    // Try to resolve common third-party jars from repositories. If not available, Gradle will fail and you can provide jars in ./libs
+    // Coordinates can be adjusted in gradle.properties
+    fetchLibs "dev.architectury:architectury:${architectury_api_version}"
+    fetchLibs "maven.modrinth:forge-config-api-port:${forge_config_api_port_version}"
+    fetchLibs "software.bernie:geckolib-fabric:${geckolib_version}"
+}
+
+task prepareLibs(type: Copy) {
+    description = 'Resolve and copy fetchLibs configuration into ./libs'
+    group = 'setup'
+    from { configurations.fetchLibs.get().resolve() }
+    into "$rootDir/libs"
+    doFirst { file("$rootDir/libs").mkdirs() }
 }
 
 subprojects {
@@ -34,7 +54,9 @@ subprojects {
         }
     }
 
+    // Ensure libs are prepared before any Java compilation
     tasks.withType(JavaCompile).configureEach {
+        dependsOn rootProject.tasks.named('prepareLibs')
         options.encoding = 'UTF-8'
     }
 }
