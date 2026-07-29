@@ -1,48 +1,20 @@
-// common/build.gradle — platform-agnostic module (no loom-specific DSL calls)
-
-plugins.withId('dev.architectury.loom') {
-    architectury {
-        common rootProject.enabled_platforms.split(',')
-    }
+plugins {
+    id 'java-library'
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+group = rootProject.maven_group
+version = rootProject.mod_version
 
-// DIPERBARUI: Menggunakan format Gradle 9.x untuk menggantikan archivesBaseName lama
-base {
-    archivesName = "yes-steve-model-common"
+repositories {
+    mavenCentral()
 }
 
+// Gunakan semua jar yang ada di fabric/libs sebagai dependency fallback.
+// Ini memastikan :common bisa compile tanpa mendownload artifact remote.
 dependencies {
-    // common should NOT call 'minecraft' or 'mappings' (Loom DSL).
-    // Use compileOnly for loader / platform APIs so common can compile,
-    // while actual 'minecraft' and 'mappings' stay in fabric subproject.
-
-    // Fabric loader API as compileOnly (only for compilation)
-    compileOnly "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
-
-    // Architectury API (compile only)
-    compileOnly "dev.architectury:architectury:${rootProject.architectury_api_version}"
-
-    // Forge Config API Port (compile only)
-    compileOnly "maven.modrinth:forge-config-api-port:${rootProject.forge_config_api_port_version}"
-
-    // Other libs used only at compile-time or provided at runtime
-    compileOnly "com.github.TartaricAlkaline:ImageStream:1.0.0"
+    implementation files(rootProject.fileTree(dir: 'fabric/libs', include: ['*.jar']))
 }
-
-// Native build (CMake) — DIMATIKAN.
-tasks.register('compileNative') {
-    enabled = false
-    doLast {
-        println "compileNative is disabled. Enable it manually if you have CMake + native toolchain."
-    }
-}
-
-processResources.dependsOn compileNative
 
 tasks.withType(JavaCompile).configureEach {
-    // keep failing-on-error false to avoid stopping for some generated issues
-    options.failOnError = false
     options.encoding = 'UTF-8'
 }
