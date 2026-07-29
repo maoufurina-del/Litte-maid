@@ -1,3 +1,4 @@
+// name: fabric/build.gradle
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
@@ -19,6 +20,7 @@ base {
     archivesName = "yes-steve-model-fabric"
 }
 
+// Use any jars present in fabric/libs plus the common project
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':common')
@@ -42,22 +44,38 @@ shadowJar {
     exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
 }
 
+// Debug remapJar: prints debug info and copies shadowJar output to expected name or fails with clear message
 tasks.register('remapJar') {
     dependsOn shadowJar
     doLast {
-        def src = shadowJar.archiveFile.get().asFile
-        def destName = "${base.archivesName.get()}-${project.version}-fabric-${rootProject.minecraft_version}.jar"
-        def destDir = file("${buildDir}/libs")
-        destDir.mkdirs()
-        copy {
-            from src
-            into destDir
-            rename { destName }
+        println "DEBUG: shadowJar = ${shadowJar}"
+        def srcFile = null
+        try {
+            srcFile = shadowJar.archiveFile.get().asFile
+            println "DEBUG: shadowJar.archiveFile resolved to: ${srcFile}"
+        } catch(Exception e) {
+            println "DEBUG: failed to resolve shadowJar.archiveFile: ${e.class.name}: ${e.message}"
         }
-        println "Fallback remapJar: copied ${src.name} -> ${destDir}/${destName}"
+
+        if (srcFile != null && srcFile.exists()) {
+            def destName = "${base.archivesName.get()}-${project.version}-fabric-${rootProject.minecraft_version}.jar"
+            def destDir = file("${buildDir}/libs")
+            destDir.mkdirs()
+            copy {
+                from srcFile
+                into destDir
+                rename { destName }
+            }
+            println "Fallback remapJar: copied ${srcFile.name} -> ${destDir}/${destName}"
+        } else {
+            println "DEBUG: listing build/libs contents:"
+            file("${buildDir}/libs").listFiles()?.each { println it }
+            throw new GradleException("remapJar debug: shadowJar output not found (srcFile=${srcFile}). See debug logs above.")
+        }
     }
 }
 
+// Keep build dependent on remapJar so existing build flow still produces the jar
 build.dependsOn remapJar
 
 tasks.withType(JavaCompile).configureEach {
