@@ -19,7 +19,6 @@ base {
     archivesName = "yes-steve-model-fabric"
 }
 
-// Masukkan semua jars yang ada di fabric/libs ke dalam fat jar
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':common')
@@ -43,7 +42,6 @@ shadowJar {
     exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
 }
 
-// Fallback remapJar yang hanya menyalin shadowJar ke nama yang diharapkan
 tasks.register('remapJar') {
     dependsOn shadowJar
     doLast {
