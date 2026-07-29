@@ -22,7 +22,7 @@ base {
 
 // Use any jars present in fabric/libs plus the common project
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation files(rootProject.fileTree(dir: 'libs', include: ['*.jar']))
     implementation project(':common')
 }
 
