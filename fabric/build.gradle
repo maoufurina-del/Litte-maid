@@ -1,24 +1,7 @@
-// Put buildscript BEFORE any plugins {} blocks to avoid "all buildscript {} blocks must appear before any plugins {} blocks"
-buildscript {
-    repositories {
-        maven { url 'https://maven.architectury.dev/' } // Architectury plugin repo
-        maven { url 'https://maven.fabricmc.net/' }     // Fabric repo
-        mavenCentral()
-        maven { url 'https://maven.terraformersmc.com/' }
-        maven { url 'https://jitpack.io' }
-        gradlePluginPortal()
-    }
-    dependencies {
-        classpath "dev.architectury.loom:dev.architectury.loom.gradle.plugin:1.14.8"
-    }
-}
-
 plugins {
+    id 'dev.architectury.loom' version '1.14.8'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
-
-apply plugin: 'dev.architectury.loom'
-apply plugin: 'com.github.johnrengelman.shadow'
 
 group = rootProject.maven_group
 version = rootProject.mod_version
