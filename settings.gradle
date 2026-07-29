@@ -1,2 +1,16 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        maven { url 'https://maven.terraformersmc.com/' }
+        maven { url 'https://maven.fabricmc.net/' }
+        // Architectury plugin repo
+        maven { url 'https://maven.architectury.dev/' }
+    }
+    resolutionStrategy {
+        // fallbacks or forced versions can be added here if needed
+    }
+}
+
 rootProject.name = 'Litte-maid'
 include 'common', 'fabric'
