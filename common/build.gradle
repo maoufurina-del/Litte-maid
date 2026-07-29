@@ -12,7 +12,8 @@ repositories {
 // Gunakan semua jar yang ada di fabric/libs sebagai dependency fallback.
 // Ini memastikan :common bisa compile tanpa mendownload artifact remote.
 dependencies {
-    implementation files(rootProject.fileTree(dir: 'fabric/libs', include: ['*.jar']))
+    // gunakan semua JAR di root/libs sebagai fallback
+    implementation files(rootProject.fileTree(dir: 'libs', include: ['*.jar']))
 }
 
 tasks.withType(JavaCompile).configureEach {
