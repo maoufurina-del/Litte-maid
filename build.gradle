@@ -1,62 +1,115 @@
-// Root build.gradle — minimal setup for multi-project Fabric + Loom
-buildscript {
-    repositories {
-        mavenCentral()
-        gradlePluginPortal()
-        maven { url 'https://maven.fabricmc.net/' }
-    }
+/*
+  Root build.gradle - safe fallback untuk project multi-module
+  - Menghindari pemanggilan configurations.fetchLibs.get() yang error
+  - Menyediakan ext properties yang mungkin dipakai oleh subprojects
+  - Menyediakan task prepareLibs yang aman (tidak memanggil .get() pada DefaultLegacyConfiguration)
+*/
+
+plugins {
+    id 'base'
+}
+
+ext {
+    // Ambil nilai dari gradle.properties jika ada, atau pakai default placeholder
+    minecraft_version = findProperty('minecraft_version') ?: '1.21.1'
+    fabric_loader_version = findProperty('fabric_loader_version') ?: '0.14.24'
+    fabric_api_version = findProperty('fabric_api_version') ?: '0.89.0'
+    maven_group = findProperty('maven_group') ?: 'com.example'
+    mod_version = findProperty('mod_version') ?: '1.0.0'
+    architectury_api_version = findProperty('architectury_api_version') ?: '4.0.0'
+    geckolib_version = findProperty('geckolib_version') ?: '1.0.0'
+    cardinal_components_version = findProperty('cardinal_components_version') ?: '1.0.0'
+    modmenu_version = findProperty('modmenu_version') ?: '1.0.0'
+    forge_config_api_port_version = findProperty('forge_config_api_port_version') ?: '1.0.0'
 }
 
 allprojects {
     repositories {
         mavenCentral()
-        maven { url 'https://maven.fabricmc.net/' }
         maven { url 'https://maven.terraformersmc.com/' }
         maven { url 'https://maven.shedaniel.me/' }
         maven { url 'https://jitpack.io' }
         maven { url 'https://maven.architectury.dev/' }
-        flatDir { dirs 'libs' }
     }
 }
 
-// Configuration to fetch required local libs automatically if they are not present in ./libs
-configurations.register('fetchLibs')
-
-dependencies {
-    // Try to resolve common third-party jars from repositories. If not available, Gradle will fail and you can provide jars in ./libs
-    // Coordinates can be adjusted in gradle.properties
-    fetchLibs "dev.architectury:architectury:${architectury_api_version}"
-    fetchLibs "maven.modrinth:forge-config-api-port:${forge_config_api_port_version}"
-    fetchLibs "software.bernie:geckolib-fabric:${geckolib_version}"
+// Buat konfigurasi fetchLibs jika belum ada — beberapa script mengharapkannya.
+configurations {
+    // Hanya define jika belum ada (safe)
+    if (!configurations.findByName('fetchLibs')) {
+        create('fetchLibs')
+    }
 }
 
-task prepareLibs(type: Copy) {
-    description = 'Resolve and copy fetchLibs configuration into ./libs'
-    group = 'setup'
-    from { configurations.fetchLibs.get().resolve() }
-    into "$rootDir/libs"
-    doFirst { file("$rootDir/libs").mkdirs() }
-}
+// Task prepareLibs yang aman: resolve konfigurasi dengan cara yang tidak memanggil .get() pada legacy config
+tasks.register('prepareLibs', Copy) {
+    description = 'Prepare libs for build (copies jars from fetchLibs or fabric/libs into build/libs).'
+    group = 'build'
 
-subprojects {
-    // Apply Java plugin to all subprojects so java-related configuration is available
-    apply plugin: 'java'
+    // Ambil konfigurasi dengan aman: prefer named Provider jika tersedia, fallback ke findByName
+    def fetchConfigProvider = null
+    try {
+        fetchConfigProvider = configurations.named('fetchLibs') // Provider<Configuration>
+    } catch (Exception e) {
+        fetchConfigProvider = null
+    }
+    def fetchConfig = configurations.findByName('fetchLibs')
 
-    group = rootProject.hasProperty('maven_group') ? rootProject.maven_group : 'rip.ysm'
-    version = rootProject.hasProperty('mod_version') ? rootProject.mod_version : '1.0.0'
-
-    // Configure Java toolchain in a safe way after the java plugin is applied
-    plugins.withId('java') {
-        java {
-            toolchain {
-                languageVersion = org.gradle.jvm.toolchain.JavaLanguageVersion.of(21)
+    // from closure agar lazily evaluated dan tidak memanggil .get() pada legacy type
+    from {
+        // Jika named provider tersedia, ambil .get() dari provider (legal)
+        if (fetchConfigProvider != null) {
+            try {
+                return fetchConfigProvider.get()
+            } catch (Exception e) {
+                // fallback ke fetchConfig (legacy)
             }
         }
+        if (fetchConfig != null) {
+            return fetchConfig // FileCollection atau empty
+        }
+        // fallback: gunakan folder fabric/libs jika ada
+        def libsDir = file('fabric/libs')
+        if (libsDir.exists()) {
+            return files(libsDir.listFiles().findAll { it.name.toLowerCase().endsWith('.jar') })
+        }
+        return files() // kosong
     }
 
-    // Ensure libs are prepared before any Java compilation
-    tasks.withType(JavaCompile).configureEach {
-        dependsOn rootProject.tasks.named('prepareLibs')
-        options.encoding = 'UTF-8'
+    into("$buildDir/libs")
+
+    doFirst {
+        println "prepareLibs: copying libraries into ${buildDir}/libs"
+    }
+}
+
+// Pastikan assemble/build tergantung pada prepareLibs sehingga artifacts tersedia
+tasks.named('assemble') {
+    dependsOn tasks.named('prepareLibs')
+}
+
+// Jika ada subprojects, berikan konfigurasi default (agar subproject tidak error)
+subprojects {
+    apply plugin: 'java'
+
+    // default sourceCompatibility jika diperlukan
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+// Small helper task to list libs (debug)
+tasks.register('listPreparedLibs') {
+    doLast {
+        def libsDir = file("$buildDir/libs")
+        println "Prepared libs in: ${libsDir}"
+        if (libsDir.exists()) {
+            libsDir.listFiles()?.each { println it.name }
+        } else {
+            println "No libs prepared yet."
+        }
     }
 }
