@@ -1,3 +1,5 @@
+// common/build.gradle — platform-agnostic module (no loom-specific DSL calls)
+
 plugins.withId('dev.architectury.loom') {
     architectury {
         common rootProject.enabled_platforms.split(',')
@@ -12,19 +14,20 @@ base {
 }
 
 dependencies {
-    // Memuat pustaka dasar Minecraft sesuai versi properti yang ditentukan (1.21.11)
-    minecraft "com.mojang:minecraft:$rootProject.minecraft_version"
-    
-    mappings loom.officialMojangMappings()
+    // common should NOT call 'minecraft' or 'mappings' (Loom DSL).
+    // Use compileOnly for loader / platform APIs so common can compile,
+    // while actual 'minecraft' and 'mappings' stay in fabric subproject.
 
-    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+    // Fabric loader API as compileOnly (only for compilation)
+    compileOnly "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
 
-    // UDAH DIUBAH AMBIL DARI gradle.properties
-    modCompileOnly "dev.architectury:architectury:${rootProject.architectury_api_version}"
+    // Architectury API (compile only)
+    compileOnly "dev.architectury:architectury:${rootProject.architectury_api_version}"
 
-    // UDAH DIUBAH AMBIL DARI gradle.properties 
-    modCompileOnly "maven.modrinth:forge-config-api-port:${rootProject.forge_config_api_port_version}"
+    // Forge Config API Port (compile only)
+    compileOnly "maven.modrinth:forge-config-api-port:${rootProject.forge_config_api_port_version}"
 
+    // Other libs used only at compile-time or provided at runtime
     compileOnly "com.github.TartaricAlkaline:ImageStream:1.0.0"
 }
 
@@ -39,5 +42,7 @@ tasks.register('compileNative') {
 processResources.dependsOn compileNative
 
 tasks.withType(JavaCompile).configureEach {
+    // keep failing-on-error false to avoid stopping for some generated issues
     options.failOnError = false
+    options.encoding = 'UTF-8'
 }
