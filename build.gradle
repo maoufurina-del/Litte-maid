@@ -61,15 +61,19 @@ tasks.register('prepareLibs', Copy) {
     }
 }
 
+// Ensure assemble/build depends on prepareLibs
 tasks.named('assemble') {
     dependsOn tasks.named('prepareLibs')
 }
 
+// Default subproject configuration
 subprojects {
     repositories { mavenCentral() }
 
+    // Apply java plugin so subprojects get Java configurations
     apply plugin: 'java'
 
+    // Configure Java extension safely after plugin present
     plugins.withId('java') {
         project.extensions.configure(org.gradle.api.plugins.JavaPluginExtension) { javaExt ->
             javaExt.sourceCompatibility = JavaVersion.VERSION_17
@@ -81,6 +85,24 @@ subprojects {
     }
 }
 
+// === CRITICAL: Add all jars from fabric/libs to :common classpath as fallback ===
+// This makes :common compile even if remote coordinates cannot be resolved.
+project(':common') {
+    // Ensure java plugin is applied to :common
+    apply plugin: 'java'
+
+    dependencies {
+        // Add every jar in root/fabric/libs into common's compile/runtime classpath
+        implementation files(rootProject.fileTree(dir: 'fabric/libs', include: ['*.jar']))
+    }
+
+    // Also ensure compile tasks use UTF-8
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+    }
+}
+
+// Helper: list prepared libs
 tasks.register('listPreparedLibs') {
     doLast {
         def libsDir = file("$buildDir/libs")
