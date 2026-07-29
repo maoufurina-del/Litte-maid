@@ -11,7 +11,7 @@ repositories {
     maven { url 'https://maven.terraformersmc.com/' }
     maven { url 'https://maven.shedaniel.me/' }
     maven { url 'https://jitpack.io' }
-    maven { url 'https://maven.ladysnake.org/' }
+    maven { url 'https://maven.architectury.dev/' }
     flatDir { dirs 'libs' } 
 }
 
@@ -35,19 +35,20 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
     modImplementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
 
-    // 3 LIBS DARI LIBS - SESUAI FOTO KAMU
-    modImplementation name: 'ForgeConfigAPIPort-v21.11.1-mc1.21.11-Fabric'
-    modImplementation name: 'architectury-19.0.1-fabric'
-    modImplementation name: 'geckolib-fabric-1.21.11-5.4.5'
+    // Replace local jars with Maven coordinates where possible. If a dependency is not published,
+    // please provide the jar in libs/ or update the coordinates.
+    modImplementation "maven.modrinth:forge-config-api-port:${rootProject.forge_config_api_port_version}"
+    modCompileOnly "dev.architectury:architectury:${rootProject.architectury_api_version}"
+    modImplementation "software.bernie:geckolib-fabric:${rootProject.geckolib_version}"
 
-    // 2 LIBS PAKAI LINK
+    // Cardinal Components
     modImplementation "org.ladysnake.cardinal-components-api:cardinal-components-base:$rootProject.cardinal_components_version"
     modImplementation "org.ladysnake.cardinal-components-api:cardinal-components-entity:$rootProject.cardinal_components_version"
     implementation 'com.github.TartaricAlkaline:ImageStream:1.0.0'
     
     modCompileOnly "com.terraformersmc:modmenu:$rootProject.modmenu_version"
     
-    // DEPENDENSI KE COMMON
+    // DEPENDENCY TO COMMON
     modImplementation project(':common')
 }
 
