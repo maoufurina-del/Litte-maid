@@ -9,10 +9,8 @@ repositories {
     mavenCentral()
 }
 
-// Gunakan semua jar yang ada di fabric/libs sebagai dependency fallback.
-// Ini memastikan :common bisa compile tanpa mendownload artifact remote.
+// Use all jars in root/libs as fallback dependencies
 dependencies {
-    // gunakan semua JAR di root/libs sebagai fallback
     implementation files(rootProject.fileTree(dir: 'libs', include: ['*.jar']))
 }
 
