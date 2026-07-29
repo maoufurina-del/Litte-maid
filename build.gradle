@@ -1,5 +1,3 @@
-name = 'Litte-maid-root'
-
 plugins {
     id 'base'
 }
@@ -81,8 +79,6 @@ tasks.named('assemble') {
 
 // Konfigurasi default untuk subprojects — pasang plugin java dan atur kompatibilitas dengan cara yang aman
 subprojects {
-    // Jangan langsung set sourceCompatibility di sini — lakukan setelah plugin 'java' dipasang
-    // Pastikan repositori minimal tersedia
     repositories {
         mavenCentral()
     }
@@ -92,7 +88,6 @@ subprojects {
 
     // Setelah plugin java tersedia, konfigurasikan JavaPluginExtension (aman)
     plugins.withId('java') {
-        // JavaPluginExtension ada di org.gradle.api.plugins.JavaPluginExtension
         project.extensions.configure(org.gradle.api.plugins.JavaPluginExtension) { javaExt ->
             javaExt.sourceCompatibility = JavaVersion.VERSION_17
             javaExt.targetCompatibility = JavaVersion.VERSION_17
