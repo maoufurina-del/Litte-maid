@@ -11,7 +11,7 @@ base {
 
 dependencies {
     // Memuat pustaka dasar Minecraft sesuai versi properti yang ditentukan (1.21.11)
-    minecraft "net.minecraft:minecraft:$rootProject.minecraft_version"
+    minecraft "com.mojang:minecraft:$rootProject.minecraft_version"
     
     mappings loom.officialMojangMappings()
 
@@ -23,7 +23,7 @@ dependencies {
     // UDAH DIUBAH AMBIL DARI gradle.properties 
     modCompileOnly "maven.modrinth:forge-config-api-port:${rootProject.forge_config_api_port_version}"
 
-    compileOnly "com.github.TartaricAlkaline:ImageStream:-SNAPSHOT"
+    compileOnly "com.github.TartaricAlkaline:ImageStream:1.0.0"
 }
 
 // Native build (CMake) — DIMATIKAN.
