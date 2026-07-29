@@ -3,11 +3,19 @@ plugins {
 }
 
 ext {
+    // Versi utama — override lewat gradle.properties bila perlu
     minecraft_version = findProperty('minecraft_version') ?: '1.21.11'
     fabric_loader_version = findProperty('fabric_loader_version') ?: '0.14.24'
     fabric_api_version = findProperty('fabric_api_version') ?: '0.89.0'
     maven_group = findProperty('maven_group') ?: 'com.example'
     mod_version = findProperty('mod_version') ?: '1.0.0'
+
+    // Architectury / libs versions (ditambahkan supaya common/build.gradle tidak gagal)
+    architectury_api_version = findProperty('architectury_api_version') ?: '4.0.0'
+    geckolib_version = findProperty('geckolib_version') ?: '1.21.11-5.4.5'
+    cardinal_components_version = findProperty('cardinal_components_version') ?: '2.8.0' 
+    modmenu_version = findProperty('modmenu_version') ?: '4.0.0'
+    forge_config_api_port_version = findProperty('forge_config_api_port_version') ?: 'v21.11.1-mc1.21.11-Fabric'
 }
 
 allprojects {
@@ -17,6 +25,7 @@ allprojects {
         maven { url 'https://maven.shedaniel.me/' }
         maven { url 'https://jitpack.io' }
         maven { url 'https://maven.architectury.dev/' }
+        maven { url 'https://maven.fabricmc.net/' }
     }
 }
 
@@ -88,15 +97,13 @@ subprojects {
 // === CRITICAL: Add all jars from fabric/libs to :common classpath as fallback ===
 // This makes :common compile even if remote coordinates cannot be resolved.
 project(':common') {
-    // Ensure java plugin is applied to :common
     apply plugin: 'java'
 
     dependencies {
-        // Add every jar in root/fabric/libs into common's compile/runtime classpath
+        // Include all jars from fabric/libs so compile won't try to download missing remote deps
         implementation files(rootProject.fileTree(dir: 'fabric/libs', include: ['*.jar']))
     }
 
-    // Also ensure compile tasks use UTF-8
     tasks.withType(JavaCompile).configureEach {
         options.encoding = 'UTF-8'
     }
