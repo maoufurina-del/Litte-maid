@@ -1,3 +1,12 @@
-pluginManagement { repositories { gradlePluginPortal() mavenCentral() maven { url ' https://maven.terraformersmc.com/ ' } maven { url ' https://maven.fabricmc.net/ ' } maven { url ' https://maven.architectury.dev/ ' } } }
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        maven { url 'https://maven.terraformersmc.com/' }
+        maven { url 'https://maven.fabricmc.net/' }
+        maven { url 'https://maven.architectury.dev/' }
+    }
+}
 
-rootProject.name = 'Little-maid' include 'common', 'fabric'
+rootProject.name = 'Litte-maid'
+include 'common', 'fabric'
