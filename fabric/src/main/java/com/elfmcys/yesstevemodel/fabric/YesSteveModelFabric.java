@@ -1,11 +1,11 @@
-package com.yesstevemodel.fabric; // <- GANTI INI
+package com.elfmcys.yesstevemodel.fabric;
 
-import com.yesstevemodel.YesSteveModel; // <- GANTI INI JUGA
+import com.elfmcys.yesstevemodel.YesSteveModel;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents;
 import net.minecraft.server.level.ServerPlayer;
-import com.yesstevemodel.capability.ModelInfoCapability; // <- GANTI
-import com.yesstevemodel.network.NetworkHandler; // <- GANTI
+import com.elfmcys.yesstevemodel.capability.ModelInfoCapability;
+import com.elfmcys.yesstevemodel.network.NetworkHandler;
 
 public final class YesSteveModelFabric implements ModInitializer {
     @Override

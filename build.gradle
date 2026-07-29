@@ -1,8 +1,33 @@
-[
-  {
-    "file": "build.gradle",
-    "content": "buildscript {\n    repositories {\n        mavenCentral()\n        gradlePluginPortal()\n        maven { url 'https://maven.fabricmc.net/' }\n        maven { url 'https://maven.architectury.dev/' }\n    }\n    dependencies {\n        // Menggunakan 1.7-SNAPSHOT karena versi 1.7.143 tidak ditemukan di server Architectury\n        classpath 'dev.architectury:architectury-loom:1.7-SNAPSHOT'\n        classpath 'dev.architectury:architectury-plugin:3.4-SNAPSHOT'\n        classpath 'com.github.johnrengelman:shadow:8.1.1'\n    }\n}\n\napply plugin: 'dev.architectury.loom'\napply plugin: 'architectury-plugin'\napply plugin: 'com.github.johnrengelman.shadow'\n\narchitectury {\n    // Mengambil versi 1.21.11 dari gradle.properties\n    minecraft = project.minecraft_version\n}\n\nallprojects {\n    group = rootProject.maven_group\n    version = rootProject.mod_version\n}\n\nsubprojects {\n    apply plugin: 'dev.architectury.loom'\n    apply plugin: 'architectury-plugin'\n    apply plugin: 'maven-publish'\n\n    // Penyesuaian untuk Java 21 (Wajib untuk 1.20.5 ke atas)\n    java {\n        withSourcesJar()\n        sourceCompatibility = JavaVersion.VERSION_21\n        targetCompatibility = JavaVersion.VERSION_21\n    }\n\n    tasks.withType(JavaCompile).configureEach {\n        options.encoding = 'UTF-8'\n        options.release = 21\n    }\n\n    repositories {\n        mavenCentral()\n        maven { url 'https://maven.fabricmc.net/' }\n        maven { url 'https://maven.architectury.dev/' }\n        maven { url 'https://maven.terraformersmc.com/' } // Untuk ModMenu\n        maven { url 'https://maven.ladysnake.org/releases' } // Untuk Cardinal Components\n        flatDir { dirs rootProject.file('libs') }\n    }\n\n    dependencies {\n        minecraft \"com.mojang:minecraft:${rootProject.minecraft_version}\"\n        // Menggunakan yarn mappings dari gradle.properties\n        mappings \"net.fabricmc:yarn:${rootProject.yarn_mappings}:v2\"\n    }\n\n    base {\n        archivesName = \"${rootProject.archives_name}-${project.name}\"\n    }\n\n    if (project.name == 'fabric') {\n        evaluationDependsOn(':common')\n    }\n}\n\n// Pengaturan khusus untuk modul Fabric\nproject(':fabric') {\n    dependencies {\n        modImplementation \"net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}\"\n        modApi \"net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}\"\n        \n        implementation project(path: ':common', configuration: 'namedElements')\n        \"developmentFabric\" project(path: ':common', configuration: 'namedElements')\n    }\n}\n\n// Pengaturan publikasi\nsubprojects {\n    publishing {\n        publications {\n            mavenJava(MavenPublication) {\n                artifactId = base.archivesName.get()\n                from components.java\n            }\n        }\n        repositories {\n            // Tambahkan repository lokal atau remote jika diperlukan\n        }\n    }\n}",
-    "instructions": "1. Hapus semua isi file build.gradle Anda yang lama. 2. Copy-paste kode di atas secara utuh. 3. Pastikan file gradle.properties Anda tetap menggunakan minecraft_version=1.21.11. 4. Jalankan './gradlew build' kembali. Alasan build Anda gagal sebelumnya adalah karena versi Architectury Loom 1.7.143 tidak terdaftar di repository resmi, sehingga saya menggantinya dengan 1.7-SNAPSHOT agar Gradle mencari versi terbaru yang mendukung 1.21.x secara otomatis."
-  }
+// Root build.gradle — minimal setup for multi-project Fabric + Loom
+buildscript {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+        maven { url 'https://maven.fabricmc.net/' }
+    }
 }
-]
+
+allprojects {
+    repositories {
+        mavenCentral()
+        maven { url 'https://maven.fabricmc.net/' }
+        maven { url 'https://maven.terraformersmc.com/' }
+        maven { url 'https://maven.shedaniel.me/' }
+        maven { url 'https://jitpack.io' }
+        flatDir { dirs 'libs' }
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+
+    group = rootProject.hasProperty('maven_group') ? rootProject.maven_group : 'rip.ysm'
+    version = rootProject.hasProperty('mod_version') ? rootProject.mod_version : '1.0.0'
+
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+    }
+}
