@@ -19,13 +19,20 @@ allprojects {
 }
 
 subprojects {
+    // Apply Java plugin to all subprojects so java-related configuration is available
     apply plugin: 'java'
 
     group = rootProject.hasProperty('maven_group') ? rootProject.maven_group : 'rip.ysm'
     version = rootProject.hasProperty('mod_version') ? rootProject.mod_version : '1.0.0'
 
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    // Configure Java toolchain in a safe way after the java plugin is applied
+    plugins.withId('java') {
+        java {
+            toolchain {
+                languageVersion = org.gradle.jvm.toolchain.JavaLanguageVersion.of(21)
+            }
+        }
+    }
 
     tasks.withType(JavaCompile).configureEach {
         options.encoding = 'UTF-8'
