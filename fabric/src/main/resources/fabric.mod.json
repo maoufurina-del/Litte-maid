@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "id": "yes_steve_model",
+  "version": "${version}",
+  "name": "Yes Steve Model",
+  "description": "Custom player model system for Minecraft 1.21.11",
+  "authors": ["Maou"],
+  "contact": {
+    "homepage": "https://github.com/ffkipas0107-design/TLM-fabric-1.20.1",
+    "issues": "https://github.com/ffkipas0107-design/TLM-fabric-1.20.1/issues"
+  },
+  "license": "MIT",
+  "icon": "yesstevemodel.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.elfmcys.yesstevemodel.fabric.YesSteveModelFabric"
+    ],
+    "client": [
+      "com.elfmcys.yesstevemodel.fabric.client.YesSteveModelFabricClient"
+    ],
+    "modmenu": [
+      "com.elfmcys.yesstevemodel.fabric.compat.ModMenuConfigScreenProvider"
+    ],
+    "cardinal-components-entity": [
+      "com.elfmcys.yesstevemodel.fabric.YsmComponents"
+    ]
+  },
+  "mixins": [
+    "yes_steve_model.mixins.json",
+    "yes_steve_model_fabric.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.10",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*",
+    "architectury": ">=19.0.0",
+    "forgeconfigapiport": ">=20.2.0",
+    "geckolib": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  },
+  "custom": {
+    "cardinal-components": [
+      "yes_steve_model:star_models",
+      "yes_steve_model:auth_models",
+      "yes_steve_model:model_info",
+      "yes_steve_model:projectile_model",
+      "yes_steve_model:vehicle_model"
+    ]
+  }
+}

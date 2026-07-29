@@ -1,0 +1,82 @@
+plugins {
+    id 'dev.architectury.loom' version '1.14.8'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group = rootProject.maven_group
+version = rootProject.mod_version
+
+repositories {
+    mavenCentral()
+    maven { url 'https://maven.terraformersmc.com/' }
+    maven { url 'https://maven.shedaniel.me/' }
+    maven { url 'https://jitpack.io' }
+    maven { url 'https://maven.ladysnake.org/' }
+    flatDir { dirs 'libs' } 
+}
+
+architectury {
+    platformSetupLoomIde()
+    fabric()
+}
+
+loom {
+    splitEnvironmentSourceSets()
+}
+
+base {
+    archivesName = "yes-steve-model-fabric"
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:$rootProject.minecraft_version"
+    mappings loom.officialMojangMappings()
+
+    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
+
+    // 3 LIBS DARI LIBS - SESUAI FOTO KAMU
+    modImplementation name: 'ForgeConfigAPIPort-v21.11.1-mc1.21.11-Fabric'
+    modImplementation name: 'architectury-19.0.1-fabric'
+    modImplementation name: 'geckolib-fabric-1.21.11-5.4.5'
+
+    // 2 LIBS PAKAI LINK
+    modImplementation "org.ladysnake.cardinal-components-api:cardinal-components-base:$rootProject.cardinal_components_version"
+    modImplementation "org.ladysnake.cardinal-components-api:cardinal-components-entity:$rootProject.cardinal_components_version"
+    implementation 'com.github.TartaricAlkaline:ImageStream:1.0.0'
+    
+    modCompileOnly "com.terraformersmc:modmenu:$rootProject.modmenu_version"
+    
+    // DEPENDENSI KE COMMON
+    modImplementation project(':common')
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('*.mixins.json') { expand version: project.version }
+    filesMatching('fabric.mod.json') { expand version: project.version }
+    from(project(':common').sourceSets.main.resources.srcDirs) {
+        exclude '**/*.mixins.json'
+        exclude 'fabric.mod.json'
+    }
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+shadowJar {
+    configurations = [project.configurations.runtimeClasspath]
+    archiveClassifier = ''
+    mergeServiceFiles()
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
+}
+
+remapJar {
+    input.set shadowJar.archiveFile
+    dependsOn shadowJar
+    archiveFileName = "${base.archivesName.get()}-${project.version}-fabric-${rootProject.minecraft_version}.jar"
+}
+
+build.dependsOn remapJar
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

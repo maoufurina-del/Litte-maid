@@ -1,0 +1,78 @@
+name: Enterprise Multiloader CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "**" ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ "**" ]
+  workflow_dispatch:
+    inputs:
+      debug_mode:
+        description: 'Enable Gradle Debug & Stacktrace'
+        required: false
+        default: false
+        type: boolean
+      force_release:
+        description: 'Force generate a draft release'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: read
+  checks: write
+  actions: read
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
+
+jobs:
+  build-project:
+    name: Build Mod Java 21
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 9.2.0 # DIPERBARUI: Menggunakan Gradle 9.2 agar kompatibel dengan Loom 1.14.8
+      - run: chmod +x ./gradlew
+      - if: ${{ inputs.debug_mode }}
+        run: ./gradlew :common:build :fabric:build --stacktrace --debug --no-daemon  # BUILD URUT
+      - if: ${{ !inputs.debug_mode }}
+        run: ./gradlew :common:build :fabric:build --no-daemon  # BUILD URUT
+      - name: Upload Fabric Artifact
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: yes-steve-model-fabric-1.21.11
+          path: |
+            **/build/libs/*.jar
+            !**/*-sources.jar
+            !**/*-dev.jar
+          if-no-files-found: warn
+          retention-days: 7
+
+  release-deploy:
+    name: Auto Release
+    needs: build-project
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.force_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: yes-steve-model-fabric-1.21.11
+          path: ./dist-release
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: ./dist-release/*.jar
+          generate_release_notes: true
+          draft: ${{ inputs.force_release == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

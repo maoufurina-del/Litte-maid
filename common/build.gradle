@@ -1,0 +1,41 @@
+architectury {
+    common rootProject.enabled_platforms.split(',')
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+// DIPERBARUI: Menggunakan format Gradle 9.x untuk menggantikan archivesBaseName lama
+base {
+    archivesName = "yes-steve-model-common"
+}
+
+dependencies {
+    // Memuat pustaka dasar Minecraft sesuai versi properti yang ditentukan (1.21.11)
+    minecraft "net.minecraft:minecraft:$rootProject.minecraft_version"
+    
+    mappings loom.officialMojangMappings()
+
+    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+
+    // UDAH DIUBAH AMBIL DARI gradle.properties
+    modCompileOnly "dev.architectury:architectury:${rootProject.architectury_api_version}"
+
+    // UDAH DIUBAH AMBIL DARI gradle.properties 
+    modCompileOnly "maven.modrinth:forge-config-api-port:${rootProject.forge_config_api_port_version}"
+
+    compileOnly "com.github.TartaricAlkaline:ImageStream:-SNAPSHOT"
+}
+
+// Native build (CMake) — DIMATIKAN.
+tasks.register('compileNative') {
+    enabled = false
+    doLast {
+        println "compileNative is disabled. Enable it manually if you have CMake + native toolchain."
+    }
+}
+
+processResources.dependsOn compileNative
+
+tasks.withType(JavaCompile).configureEach {
+    options.failOnError = false
+}
