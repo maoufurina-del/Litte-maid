@@ -3,17 +3,11 @@ plugins {
 }
 
 ext {
-    // Ambil nilai dari gradle.properties jika ada, atau pakai default placeholder
     minecraft_version = findProperty('minecraft_version') ?: '1.21.11'
     fabric_loader_version = findProperty('fabric_loader_version') ?: '0.14.24'
     fabric_api_version = findProperty('fabric_api_version') ?: '0.89.0'
     maven_group = findProperty('maven_group') ?: 'com.example'
     mod_version = findProperty('mod_version') ?: '1.0.0'
-    architectury_api_version = findProperty('architectury_api_version') ?: '4.0.0'
-    geckolib_version = findProperty('geckolib_version') ?: '1.0.0'
-    cardinal_components_version = findProperty('cardinal_components_version') ?: '1.0.0'
-    modmenu_version = findProperty('modmenu_version') ?: '1.0.0'
-    forge_config_api_port_version = findProperty('forge_config_api_port_version') ?: '1.0.0'
 }
 
 allprojects {
@@ -26,19 +20,18 @@ allprojects {
     }
 }
 
-// Buat konfigurasi fetchLibs jika belum ada — beberapa script mengharapkannya.
+// Create fetchLibs if not present (some scripts expect it)
 configurations {
     if (!configurations.findByName('fetchLibs')) {
         create('fetchLibs')
     }
 }
 
-// Task prepareLibs yang aman: resolve konfigurasi dengan cara yang tidak memanggil .get() pada legacy config
+// Safe prepareLibs: copy jars from fetchLibs or fabric/libs into build/libs
 tasks.register('prepareLibs', Copy) {
     description = 'Prepare libs for build (copies jars from fetchLibs or fabric/libs into build/libs).'
     group = 'build'
 
-    // Coba ambil provider named('fetchLibs') jika tersedia
     def fetchConfigProvider = null
     try {
         fetchConfigProvider = configurations.named('fetchLibs')
@@ -49,11 +42,7 @@ tasks.register('prepareLibs', Copy) {
 
     from {
         if (fetchConfigProvider != null) {
-            try {
-                return fetchConfigProvider.get()
-            } catch (Exception ignored) {
-                // fallback ke fetchConfig
-            }
+            try { return fetchConfigProvider.get() } catch (Exception ignored) {}
         }
         if (fetchConfig != null) {
             return fetchConfig
@@ -72,43 +61,30 @@ tasks.register('prepareLibs', Copy) {
     }
 }
 
-// Pastikan assemble/build tergantung pada prepareLibs sehingga artifacts tersedia
 tasks.named('assemble') {
     dependsOn tasks.named('prepareLibs')
 }
 
-// Konfigurasi default untuk subprojects — pasang plugin java dan atur kompatibilitas dengan cara yang aman
 subprojects {
-    repositories {
-        mavenCentral()
-    }
+    repositories { mavenCentral() }
 
-    // Pasang plugin java agar project yang butuh Java punya tasks/extensions
     apply plugin: 'java'
 
-    // Setelah plugin java tersedia, konfigurasikan JavaPluginExtension (aman)
     plugins.withId('java') {
         project.extensions.configure(org.gradle.api.plugins.JavaPluginExtension) { javaExt ->
             javaExt.sourceCompatibility = JavaVersion.VERSION_17
             javaExt.targetCompatibility = JavaVersion.VERSION_17
         }
-
-        // Atur default encoding dan JavaCompile options untuk subproject
         tasks.withType(JavaCompile).configureEach {
             options.encoding = 'UTF-8'
         }
     }
 }
 
-// Small helper task to list libs (debug)
 tasks.register('listPreparedLibs') {
     doLast {
         def libsDir = file("$buildDir/libs")
         println "Prepared libs in: ${libsDir}"
-        if (libsDir.exists()) {
-            libsDir.listFiles()?.each { println it.name }
-        } else {
-            println "No libs prepared yet."
-        }
+        if (libsDir.exists()) libsDir.listFiles()?.each { println it.name } else println "No libs prepared yet."
     }
 }
