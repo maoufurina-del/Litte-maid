@@ -1,5 +1,5 @@
 plugins {
-    id 'dev.architectury.loom' version '1.14.8'
+    id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
@@ -15,48 +15,24 @@ repositories {
     flatDir { dirs 'libs' }
 }
 
-architectury {
-    platformSetupLoomIde()
-    fabric()
-}
-
-loom {
-    splitEnvironmentSourceSets()
-}
-
 base {
     archivesName = "yes-steve-model-fabric"
 }
 
+// Masukkan semua jars yang ada di fabric/libs ke dalam fat jar
 dependencies {
-    minecraft "com.mojang:minecraft:$rootProject.minecraft_version"
-    mappings loom.officialMojangMappings()
-
-    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
-
-    modImplementation "maven.modrinth:forge-config-api-port:${rootProject.forge_config_api_port_version}"
-    modCompileOnly "dev.architectury:architectury:${rootProject.architectury_api_version}"
-    modImplementation "software.bernie:geckolib-fabric:${rootProject.geckolib_version}"
-
-    modImplementation "org.ladysnake.cardinal-components-api:cardinal-components-base:$rootProject.cardinal_components_version"
-    modImplementation "org.ladysnake.cardinal-components-api:cardinal-components-entity:$rootProject.cardinal_components_version"
-    implementation 'com.github.TartaricAlkaline:ImageStream:1.0.0'
-    
-    modCompileOnly "com.terraformersmc:modmenu:$rootProject.modmenu_version"
-    
-    // DEPENDENCY TO COMMON
-    modImplementation project(':common')
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(':common')
 }
 
 processResources {
     inputs.property 'version', project.version
-    filesMatching('*.mixins.json') { expand version: project.version }
-    filesMatching('fabric.mod.json') { expand version: project.version }
     from(project(':common').sourceSets.main.resources.srcDirs) {
         exclude '**/*.mixins.json'
         exclude 'fabric.mod.json'
     }
+    filesMatching('*.mixins.json') { expand version: project.version }
+    filesMatching('fabric.mod.json') { expand version: project.version }
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
@@ -67,10 +43,21 @@ shadowJar {
     exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
 }
 
-remapJar {
-    input.set shadowJar.archiveFile
+// Fallback remapJar yang hanya menyalin shadowJar ke nama yang diharapkan
+tasks.register('remapJar') {
     dependsOn shadowJar
-    archiveFileName = "${base.archivesName.get()}-${project.version}-fabric-${rootProject.minecraft_version}.jar"
+    doLast {
+        def src = shadowJar.archiveFile.get().asFile
+        def destName = "${base.archivesName.get()}-${project.version}-fabric-${rootProject.minecraft_version}.jar"
+        def destDir = file("${buildDir}/libs")
+        destDir.mkdirs()
+        copy {
+            from src
+            into destDir
+            rename { destName }
+        }
+        println "Fallback remapJar: copied ${src.name} -> ${destDir}/${destName}"
+    }
 }
 
 build.dependsOn remapJar
