@@ -11,7 +11,7 @@ plugins {
 
 ext {
     // Ambil nilai dari gradle.properties jika ada, atau pakai default placeholder
-    minecraft_version = findProperty('minecraft_version') ?: '1.21.1'
+    minecraft_version = findProperty('minecraft_version') ?: '1.21.11'
     fabric_loader_version = findProperty('fabric_loader_version') ?: '0.14.24'
     fabric_api_version = findProperty('fabric_api_version') ?: '0.89.0'
     maven_group = findProperty('maven_group') ?: 'com.example'
