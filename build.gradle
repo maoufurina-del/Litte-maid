@@ -1,9 +1,4 @@
-/*
-  Root build.gradle - safe fallback untuk project multi-module
-  - Menghindari pemanggilan configurations.fetchLibs.get() yang error
-  - Menyediakan ext properties yang mungkin dipakai oleh subprojects
-  - Menyediakan task prepareLibs yang aman (tidak memanggil .get() pada DefaultLegacyConfiguration)
-*/
+name = 'Litte-maid-root'
 
 plugins {
     id 'base'
@@ -35,7 +30,6 @@ allprojects {
 
 // Buat konfigurasi fetchLibs jika belum ada — beberapa script mengharapkannya.
 configurations {
-    // Hanya define jika belum ada (safe)
     if (!configurations.findByName('fetchLibs')) {
         create('fetchLibs')
     }
@@ -46,34 +40,31 @@ tasks.register('prepareLibs', Copy) {
     description = 'Prepare libs for build (copies jars from fetchLibs or fabric/libs into build/libs).'
     group = 'build'
 
-    // Ambil konfigurasi dengan aman: prefer named Provider jika tersedia, fallback ke findByName
+    // Coba ambil provider named('fetchLibs') jika tersedia
     def fetchConfigProvider = null
     try {
-        fetchConfigProvider = configurations.named('fetchLibs') // Provider<Configuration>
+        fetchConfigProvider = configurations.named('fetchLibs')
     } catch (Exception e) {
         fetchConfigProvider = null
     }
     def fetchConfig = configurations.findByName('fetchLibs')
 
-    // from closure agar lazily evaluated dan tidak memanggil .get() pada legacy type
     from {
-        // Jika named provider tersedia, ambil .get() dari provider (legal)
         if (fetchConfigProvider != null) {
             try {
                 return fetchConfigProvider.get()
-            } catch (Exception e) {
-                // fallback ke fetchConfig (legacy)
+            } catch (Exception ignored) {
+                // fallback ke fetchConfig
             }
         }
         if (fetchConfig != null) {
-            return fetchConfig // FileCollection atau empty
+            return fetchConfig
         }
-        // fallback: gunakan folder fabric/libs jika ada
         def libsDir = file('fabric/libs')
         if (libsDir.exists()) {
             return files(libsDir.listFiles().findAll { it.name.toLowerCase().endsWith('.jar') })
         }
-        return files() // kosong
+        return files()
     }
 
     into("$buildDir/libs")
@@ -88,16 +79,29 @@ tasks.named('assemble') {
     dependsOn tasks.named('prepareLibs')
 }
 
-// Jika ada subprojects, berikan konfigurasi default (agar subproject tidak error)
+// Konfigurasi default untuk subprojects — pasang plugin java dan atur kompatibilitas dengan cara yang aman
 subprojects {
-    apply plugin: 'java'
-
-    // default sourceCompatibility jika diperlukan
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-
+    // Jangan langsung set sourceCompatibility di sini — lakukan setelah plugin 'java' dipasang
+    // Pastikan repositori minimal tersedia
     repositories {
         mavenCentral()
+    }
+
+    // Pasang plugin java agar project yang butuh Java punya tasks/extensions
+    apply plugin: 'java'
+
+    // Setelah plugin java tersedia, konfigurasikan JavaPluginExtension (aman)
+    plugins.withId('java') {
+        // JavaPluginExtension ada di org.gradle.api.plugins.JavaPluginExtension
+        project.extensions.configure(org.gradle.api.plugins.JavaPluginExtension) { javaExt ->
+            javaExt.sourceCompatibility = JavaVersion.VERSION_17
+            javaExt.targetCompatibility = JavaVersion.VERSION_17
+        }
+
+        // Atur default encoding dan JavaCompile options untuk subproject
+        tasks.withType(JavaCompile).configureEach {
+            options.encoding = 'UTF-8'
+        }
     }
 }
 
