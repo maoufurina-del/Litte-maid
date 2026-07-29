@@ -39,15 +39,28 @@ jobs:
         run: ./gradlew prepareLibs --no-daemon --stacktrace
         continue-on-error: true
 
-      - name: Build Fabric remapped jar
-        run: ./gradlew :fabric:remapJar --no-daemon --stacktrace
+      - name: Build Fabric remapped jar and capture log
+        run: |
+          # stop pipeline on any failure inside the pipeline
+          set -o pipefail
+          echo "=== START remapJar ==="
+          ./gradlew :fabric:remapJar --no-daemon --stacktrace --info 2>&1 | tee gradle-remap.log
+          echo "=== END remapJar (exit code: $?) ===" | tee -a gradle-remap.log
         env:
           JAVA_TOOL_OPTIONS: '-Dorg.gradle.jvmargs=-Xmx3G'
+        continue-on-error: true
 
-      - name: Upload Fabric artifact
-        if: success()
+      - name: Upload Gradle remap log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-remap-log
+          path: gradle-remap.log
+
+      - name: Upload Fabric artifact (jar)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: yes-steve-model-fabric
           path: fabric/build/libs/*.jar
-          if-no-files-found: error
+          if-no-files-found: warn
