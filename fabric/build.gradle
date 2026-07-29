@@ -1,4 +1,3 @@
-// name: fabric/build.gradle
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
@@ -13,14 +12,14 @@ repositories {
     maven { url 'https://maven.shedaniel.me/' }
     maven { url 'https://jitpack.io' }
     maven { url 'https://maven.architectury.dev/' }
-    flatDir { dirs 'libs' }
+    flatDir { dirs 'libs' } // kept for local fallback if needed
 }
 
 base {
     archivesName = "yes-steve-model-fabric"
 }
 
-// Use any jars present in fabric/libs plus the common project
+// Use all jars from root/libs and the common project
 dependencies {
     implementation files(rootProject.fileTree(dir: 'libs', include: ['*.jar']))
     implementation project(':common')
@@ -75,7 +74,6 @@ tasks.register('remapJar') {
     }
 }
 
-// Keep build dependent on remapJar so existing build flow still produces the jar
 build.dependsOn remapJar
 
 tasks.withType(JavaCompile).configureEach {
