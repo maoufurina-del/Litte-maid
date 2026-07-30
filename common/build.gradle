@@ -1,6 +1,11 @@
 dependencies {
-    minecraft "com.mojang:minecraft:1.21.11"
+    // Kami menggunakan versi dari rootProject (gradle.properties)
+    minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
+    
+    // Mappings resmi dari Mojang
     mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:0.16.10"
-    implementation files(rootProject.fileTree(dir: 'libs', include: ['*.jar']))
+    
+    // Dependency untuk Architectury agar @ExpectPlatform berfungsi
+    modImplementation "dev.architectury:architectury:${rootProject.architectury_version}"
+    compileOnly "dev.architectury:architectury-injectables:${rootProject.architectury_version}"
 }
