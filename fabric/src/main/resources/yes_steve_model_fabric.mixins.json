@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.elfmcys.yesstevemodel",
+  "compatibilityLevel": "JAVA_21",
+  "refmap": "yes-steve-model-fabric-refmap.json",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "plugin": "com.elfmcys.yesstevemodel.mixin.plugin.MixinTweaker",
+  "mixins": [
+    "AbstractArrowEntityMixin",
+    "LivingEntityEffectMixin",
+    "PlayerListAccessor"
+  ],
+  "client": [
+    "mixin.client.PlayerRendererHandMixin",
+    "mixin.client.PlayerRendererMixin",
+    "mixin.client.YSMSoundInstanceFabricMixin"
+  ]
+}
