@@ -1,21 +1,16 @@
 plugins {
-    id 'fabric-loom' version '1.7-SNAPSHOT' apply false
+    id 'architectury-plugin' version '3.4-SNAPSHOT'
+    id 'dev.architectury.loom' version '1.9-SNAPSHOT' apply false
 }
+
+architectury {
+    minecraft = minecraft_version
+}
+
 allprojects {
     group = "rip.ysm"
-    version = "1.0.0"
-}
-subprojects {
-    apply plugin: 'fabric-loom'
-    apply plugin: 'java'
-    java {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-    tasks.withType(JavaCompile).configureEach {
-        options.encoding = 'UTF-8'
-        options.release = 21
-    }
+    version = mod_version
+
     repositories {
         mavenCentral()
         maven { url "https://api.modrinth.com/maven" }
@@ -25,5 +20,25 @@ subprojects {
         maven { url "https://maven.ladysnake.org/releases" }
         maven { url "https://jitpack.io" }
         flatDir { dirs rootProject.file('libs') }
+    }
+}
+
+subprojects {
+    apply plugin: 'dev.architectury.loom'
+    apply plugin: 'architectury-plugin'
+    apply plugin: 'java'
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.release = 21
+    }
+
+    loom {
+        silentMojangMappingsLicense()
     }
 }
