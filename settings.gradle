@@ -6,6 +6,7 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+
 rootProject.name = 'yes-steve-model'
 include 'common'
 include 'fabric'
