@@ -1,3 +1,7 @@
+plugins {
+    id "maven-publish"
+}
+
 architectury {
     common rootProject.enabled_platforms.split(',')
 }
@@ -69,7 +73,7 @@ sourcesJar {
     from commonSources.archiveFile.map { zipTree(it) }
 }
 
-// [FIX] Hapus shadowRuntimeElements karena tidak ada plugin shadow di common module
+// [FIX] Publishing block - butuh maven-publish plugin
 publishing {
     publications {
         mavenJava(MavenPublication) {
