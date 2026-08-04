@@ -10,7 +10,7 @@ base {
 }
 
 loom {
-    accessWidenerPath = project(':common').file("src/main/resources/yes_steve_model.accesswidener")
+    accessWidenerPath = file("src/main/resources/yes_steve_model.accesswidener")
 }
 
 configurations {
@@ -28,11 +28,11 @@ dependencies {
 
     modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
 
-    // UDAH DIUBAH AMBIL DARI gradle.properties
-    modCompileOnly "dev.architectury:architectury:${rootProject.architectury_api_version}"
+    // Architectury API
+    modApi "dev.architectury:architectury:${rootProject.architectury_api_version}"
 
-    // UDAH DIUBAH AMBIL DARI gradle.properties 
-    modCompileOnly "maven.modrinth:forge-config-api-port:${rootProject.forge_config_api_port_version}"
+    // Forge Config API Port
+    modImplementation "maven.modrinth:forge-config-api-port:${rootProject.forge_config_api_port_version}"
 
     // [FIX] architectury-injectables — wajib ada agar @ExpectPlatform bisa dikompilasi
     compileOnly "dev.architectury:architectury-injectables:${rootProject.architectury_api_version}"
@@ -65,21 +65,15 @@ jar {
 }
 
 sourcesJar {
-    def commonSources = project(':common').sourcesJar
-    dependsOn commonSources
+    def commonSources = sourcesJar
     from commonSources.archiveFile.map { zipTree(it) }
 }
 
-components.java {
-    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
-        skip()
-    }
-}
-
+// [FIX] Hapus shadowRuntimeElements karena tidak ada plugin shadow di common module
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifactId = rootProject.archives_base_name
+            artifactId = rootProject.archives_name
             from components.java
         }
     }
