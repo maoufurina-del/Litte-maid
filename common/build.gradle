@@ -1,25 +1,65 @@
-plugins {
-    id 'architectury-plugin'
-    id 'dev.architectury.loom'
-}
+/**
+ * FIX: Tambahkan baris-baris yang ditandai // [FIX] ke common/build.gradle kamu.
+ * Jika kamu sudah punya common/build.gradle, JANGAN ganti semua isinya —
+ * cukup tambahkan baris yang bertanda [FIX] ke dalam blok yang sesuai.
+ *
+ * File ini hanya contoh template. Sesuaikan versi dengan gradle.properties kamu.
+ */
 
 architectury {
-    common(rootProject.enabled_platforms.split(","))
+    common('fabric')
+}
+
+loom {
+    accessWidenerPath = project(':common').file("src/main/resources/yes_steve_model.accesswidener")
+}
+
+configurations {
+    common
+    shadowCommon
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
 }
 
 dependencies {
-    minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
-    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
 
-    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+    // Architectury API
+    modApi "dev.architectury:architectury:${architectury_version}"
 
-    // ── Local libs (ForgeConfigAPIPort, architectury-api, geckolib, etc.) ──
-    // These JARs live in the project's libs/ folder and are needed at compile
-    // time for the common module.  fabric/build.gradle already references them
-    // for the platform-specific compilation; adding them here too so common
-    // can see ForgeConfigAPIPort, geckolib, architectury-injectables, etc.
-    implementation fileTree(dir: rootProject.file('libs'), include: ['*.jar'])
+    // [FIX] architectury-injectables — wajib ada agar @ExpectPlatform bisa dikompilasi
+    // Tambahkan dua baris ini ke dependencies common/build.gradle kamu:
+    compileOnly     "dev.architectury:architectury-injectables:${architectury_version}"
+    annotationProcessor "dev.architectury:architectury-injectables:${architectury_version}"
+}
 
-    // Architectury injectables (annotations used in common cross-platform code)
-    compileOnly "dev.architectury:architectury-injectables:1.0.13"
+java {
+    withSourcesJar()
+}
+
+jar {
+    classifier "dev"
+}
+
+sourcesJar {
+    def commonSources = project(':common').sourcesJar
+    dependsOn commonSources
+    from commonSources.archiveFile.map { zipTree(it) }
+}
+
+components.java {
+    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
+        skip()
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = rootProject.archives_base_name
+            from components.java
+        }
+    }
+    repositories {
+    }
 }
