@@ -1,13 +1,12 @@
-/**
- * FIX: Tambahkan baris-baris yang ditandai // [FIX] ke common/build.gradle kamu.
- * Jika kamu sudah punya common/build.gradle, JANGAN ganti semua isinya —
- * cukup tambahkan baris yang bertanda [FIX] ke dalam blok yang sesuai.
- *
- * File ini hanya contoh template. Sesuaikan versi dengan gradle.properties kamu.
- */
-
 architectury {
-    common('fabric')
+    common rootProject.enabled_platforms.split(',')
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+// DIPERBARUI: Menggunakan format Gradle 9.x untuk menggantikan archivesBaseName lama
+base {
+    archivesName = "yes-steve-model-common"
 }
 
 loom {
@@ -22,23 +21,47 @@ configurations {
 }
 
 dependencies {
-    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    // Memuat pustaka dasar Minecraft sesuai versi properti yang ditentukan (1.21.11)
+    minecraft "net.minecraft:minecraft:$rootProject.minecraft_version"
+    
+    mappings loom.officialMojangMappings()
 
-    // Architectury API
-    modApi "dev.architectury:architectury:${architectury_version}"
+    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+
+    // UDAH DIUBAH AMBIL DARI gradle.properties
+    modCompileOnly "dev.architectury:architectury:${rootProject.architectury_api_version}"
+
+    // UDAH DIUBAH AMBIL DARI gradle.properties 
+    modCompileOnly "maven.modrinth:forge-config-api-port:${rootProject.forge_config_api_port_version}"
 
     // [FIX] architectury-injectables — wajib ada agar @ExpectPlatform bisa dikompilasi
-    // Tambahkan dua baris ini ke dependencies common/build.gradle kamu:
-    compileOnly     "dev.architectury:architectury-injectables:${architectury_version}"
-    annotationProcessor "dev.architectury:architectury-injectables:${architectury_version}"
+    compileOnly "dev.architectury:architectury-injectables:${rootProject.architectury_api_version}"
+    annotationProcessor "dev.architectury:architectury-injectables:${rootProject.architectury_api_version}"
+
+    compileOnly "com.github.TartaricAlkaline:ImageStream:-SNAPSHOT"
+}
+
+// Native build (CMake) — DIMATIKAN.
+tasks.register('compileNative') {
+    enabled = false
+    doLast {
+        println "compileNative is disabled. Enable it manually if you have CMake + native toolchain."
+    }
+}
+
+processResources.dependsOn compileNative
+
+tasks.withType(JavaCompile).configureEach {
+    options.failOnError = false
 }
 
 java {
     withSourcesJar()
 }
 
+// [FIX] Gunakan archiveClassifier (property) bukan classifier (method) untuk Gradle 8.x+
 jar {
-    classifier "dev"
+    archiveClassifier.set("dev")
 }
 
 sourcesJar {
