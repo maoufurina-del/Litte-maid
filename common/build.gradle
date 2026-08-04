@@ -33,14 +33,14 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
 
     // Architectury API
-    modApi "dev.architectury:architectury:${rootProject.architectury_api_version}"
+    modApi "dev.architectury:architectury:${rootProject.architectury_version}"
 
     // Forge Config API Port
     modImplementation "maven.modrinth:forge-config-api-port:${rootProject.forge_config_api_port_version}"
 
     // [FIX] architectury-injectables — wajib ada agar @ExpectPlatform bisa dikompilasi
-    compileOnly "dev.architectury:architectury-injectables:${rootProject.architectury_api_version}"
-    annotationProcessor "dev.architectury:architectury-injectables:${rootProject.architectury_api_version}"
+    compileOnly "dev.architectury:architectury-injectables:${rootProject.architectury_version}"
+    annotationProcessor "dev.architectury:architectury-injectables:${rootProject.architectury_version}"
 
     compileOnly "com.github.TartaricAlkaline:ImageStream:-SNAPSHOT"
 }
