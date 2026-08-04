@@ -77,7 +77,7 @@ sourcesJar {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifactId = rootProject.archives_name
+            artifactId = "yes-steve-model-common"
             from components.java
         }
     }
